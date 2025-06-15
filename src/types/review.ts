@@ -28,4 +28,26 @@ export interface ReviewData {
   analysis: Analysis;
   suggestions: Suggestion[];
   metrics: Metrics;
+  metadata?: {
+    source?: 'github' | 'manual';
+    contentType?: 'repo' | 'file' | 'pr';
+    fileName?: string;
+    filePath?: string;
+    fileUrl?: string;
+    repository?: string;
+    fileCount?: number;
+    files?: Array<{
+      name: string;
+      path: string;
+      url: string;
+    }>;
+    pullRequest?: {
+      number: number;
+      title: string;
+      author: string;
+      additions?: number;
+      deletions?: number;
+      changedFiles?: number;
+    };
+  };
 }

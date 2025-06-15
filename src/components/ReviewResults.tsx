@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, AlertTriangle, AlertCircle, CheckCircle, Info, FileText, BarChart3, Shield, Zap, Target, Code } from 'lucide-react';
+import { Download, AlertTriangle, AlertCircle, CheckCircle, Info, FileText, BarChart3, Shield, Zap, Target, Code, Github, ExternalLink, GitPullRequest } from 'lucide-react';
 import { ReviewData } from '../types/review';
 import ScoreCircle from './ScoreCircle';
 import SuggestionCard from './SuggestionCard';
@@ -12,10 +12,14 @@ export default function ReviewResults({ data }: ReviewResultsProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'suggestions' | 'metrics'>('overview');
 
   const handleExport = () => {
+    const metadata = data.metadata || {};
     const report = `
 CODE REVIEW REPORT
 ==================
 
+${metadata.source === 'github' ? `Source: GitHub (${metadata.repository || 'Unknown'})` : 'Source: Manual Input'}
+${metadata.pullRequest ? `Pull Request: #${metadata.pullRequest.number} - ${metadata.pullRequest.title}` : ''}
+${metadata.fileName ? `File: ${metadata.fileName}` : ''}
 Language: ${data.language}
 Date: ${new Date().toLocaleDateString()}
 
@@ -71,16 +75,64 @@ ${i + 1}. ${s.title} (${s.severity.toUpperCase()})
   const mediumIssues = data.suggestions.filter(s => s.severity === 'medium').length;
   const lowIssues = data.suggestions.filter(s => s.severity === 'low').length;
 
+  const metadata = data.metadata || {};
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-4 lg:space-y-0">
-          <div>
+          <div className="space-y-3">
             <h2 className="text-2xl font-bold text-white mb-2">Code Review Complete</h2>
             <p className="text-gray-300">
               Analysis for {data.language} code • {data.metrics.linesOfCode} lines • {data.suggestions.length} suggestions
             </p>
+            
+            {/* GitHub Metadata */}
+            {metadata.source === 'github' && (
+              <div className="space-y-2">
+                {metadata.repository && (
+                  <div className="flex items-center space-x-2 text-sm">
+                    <Github className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-300">Repository: {metadata.repository}</span>
+                    {metadata.fileUrl && (
+                      <a
+                        href={metadata.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-indigo-400 hover:text-indigo-300 transition-colors"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                  </div>
+                )}
+                
+                {metadata.pullRequest && (
+                  <div className="flex items-center space-x-2 text-sm">
+                    <GitPullRequest className="w-4 h-4 text-purple-400" />
+                    <span className="text-gray-300">
+                      PR #{metadata.pullRequest.number}: {metadata.pullRequest.title}
+                    </span>
+                    <span className="text-gray-400">by {metadata.pullRequest.author}</span>
+                  </div>
+                )}
+                
+                {metadata.fileName && (
+                  <div className="flex items-center space-x-2 text-sm">
+                    <FileText className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-300">File: {metadata.fileName}</span>
+                  </div>
+                )}
+                
+                {metadata.fileCount && metadata.fileCount > 1 && (
+                  <div className="flex items-center space-x-2 text-sm">
+                    <Code className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-300">Analyzed {metadata.fileCount} files</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           
           <button

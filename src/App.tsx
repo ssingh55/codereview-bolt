@@ -9,13 +9,74 @@ function App() {
   const [reviewData, setReviewData] = useState<ReviewData | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const handleCodeSubmit = async (code: string, language: string) => {
+  const handleCodeSubmit = async (code: string, language: string, metadata?: any) => {
     setIsAnalyzing(true);
     
     // Simulate analysis delay
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Mock review data
+    // Mock review data with enhanced suggestions based on content type
+    const baseSuggestions = [
+      {
+        id: '1',
+        type: 'performance' as const,
+        severity: 'high' as const,
+        title: 'Optimize Loop Performance',
+        description: 'Consider using array methods like map() or filter() instead of traditional for loops for better readability and performance.',
+        line: 15,
+        suggestion: 'Replace the for loop with items.filter(item => item.active).map(item => item.name)',
+      },
+      {
+        id: '2',
+        type: 'security' as const,
+        severity: 'critical' as const,
+        title: 'Potential SQL Injection',
+        description: 'Direct string concatenation in SQL queries can lead to SQL injection vulnerabilities.',
+        line: 28,
+        suggestion: 'Use parameterized queries or prepared statements to prevent SQL injection attacks.',
+      },
+      {
+        id: '3',
+        type: 'quality' as const,
+        severity: 'medium' as const,
+        title: 'Missing Error Handling',
+        description: 'Add proper error handling to prevent application crashes and improve user experience.',
+        line: 42,
+        suggestion: 'Wrap the function call in a try-catch block and handle potential errors gracefully.',
+      },
+      {
+        id: '4',
+        type: 'maintainability' as const,
+        severity: 'low' as const,
+        title: 'Long Function',
+        description: 'This function is quite long and handles multiple responsibilities.',
+        line: 8,
+        suggestion: 'Consider breaking this function into smaller, more focused functions.',
+      },
+    ];
+
+    // Add PR-specific suggestions if it's a pull request
+    const prSuggestions = metadata?.pullRequest ? [
+      {
+        id: '5',
+        type: 'quality' as const,
+        severity: 'medium' as const,
+        title: 'Pull Request Best Practices',
+        description: 'Consider adding unit tests for the new functionality introduced in this PR.',
+        line: 1,
+        suggestion: 'Add comprehensive test coverage for the new features and edge cases.',
+      },
+      {
+        id: '6',
+        type: 'maintainability' as const,
+        severity: 'low' as const,
+        title: 'Documentation Update',
+        description: 'Update documentation to reflect the changes made in this pull request.',
+        line: 1,
+        suggestion: 'Add or update README.md and inline comments to document new features.',
+      },
+    ] : [];
+
     const mockReview: ReviewData = {
       code,
       language,
@@ -25,50 +86,14 @@ function App() {
         performanceScore: Math.floor(Math.random() * 35) + 65,
         maintainabilityScore: Math.floor(Math.random() * 20) + 80,
       },
-      suggestions: [
-        {
-          id: '1',
-          type: 'performance',
-          severity: 'high',
-          title: 'Optimize Loop Performance',
-          description: 'Consider using array methods like map() or filter() instead of traditional for loops for better readability and performance.',
-          line: 15,
-          suggestion: 'Replace the for loop with items.filter(item => item.active).map(item => item.name)',
-        },
-        {
-          id: '2',
-          type: 'security',
-          severity: 'critical',
-          title: 'Potential SQL Injection',
-          description: 'Direct string concatenation in SQL queries can lead to SQL injection vulnerabilities.',
-          line: 28,
-          suggestion: 'Use parameterized queries or prepared statements to prevent SQL injection attacks.',
-        },
-        {
-          id: '3',
-          type: 'quality',
-          severity: 'medium',
-          title: 'Missing Error Handling',
-          description: 'Add proper error handling to prevent application crashes and improve user experience.',
-          line: 42,
-          suggestion: 'Wrap the function call in a try-catch block and handle potential errors gracefully.',
-        },
-        {
-          id: '4',
-          type: 'maintainability',
-          severity: 'low',
-          title: 'Long Function',
-          description: 'This function is quite long and handles multiple responsibilities.',
-          line: 8,
-          suggestion: 'Consider breaking this function into smaller, more focused functions.',
-        },
-      ],
+      suggestions: [...baseSuggestions, ...prSuggestions],
       metrics: {
-        linesOfCode: Math.floor(Math.random() * 200) + 50,
+        linesOfCode: metadata?.fileCount ? Math.floor(Math.random() * 500) + 200 : Math.floor(Math.random() * 200) + 50,
         complexity: Math.floor(Math.random() * 10) + 5,
         duplicateLines: Math.floor(Math.random() * 20),
         testCoverage: Math.floor(Math.random() * 40) + 60,
-      }
+      },
+      metadata,
     };
     
     setReviewData(mockReview);
@@ -121,7 +146,7 @@ function App() {
               </h2>
               <p className="text-xl text-gray-300 max-w-3xl mx-auto">
                 Get instant feedback on your code quality, security, performance, and maintainability. 
-                Upload your code and receive detailed suggestions from our AI-powered analysis engine.
+                Upload your code, import from GitHub, or review pull requests with our AI-powered analysis engine.
               </p>
             </div>
 
